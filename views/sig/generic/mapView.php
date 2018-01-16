@@ -152,8 +152,8 @@
 			<?php if(!isset($sigParams['useBtnCloseMap']) || @$sigParams['useBtnCloseMap'] == true ){ ?>
 			<div class="btn-group btn-group-lg tooltips"
 				 data-toggle="tooltip" data-placement="bottom" title="Fermer la carte">
-				<button type="button" class="btn btn-map " id="btn-back" >
-				<i class="fa fa-chevron-up"></i></button>
+				<button type="button" class="btn btn-map " id="btn-back" >Fermer 
+				<i class="fa fa-times"></i></button>
 			</div>
 
 			<?php } ?>	
