@@ -430,6 +430,7 @@ class CommunecterController extends Controller
     ),
     "mailmanagement"=> array(
       "droppedmail" => array("href" => "/communecter/mailmanagement/droppedmail"),
+      "updatetopending" => array("href" => "/communecter/mailmanagement/updatetopending"),
     ),
     "element"=> array(
       "updatesettings"      => array('href' => "/ph/communecter/element/updatesettings"),
@@ -446,6 +447,7 @@ class CommunecterController extends Controller
       "savecontact"         => array("href" => "/ph/communecter/element/savecontact"),
       "saveurl"             => array("href" => "/ph/communecter/element/saveurl"),
       "get"                 => array("href" => "/ph/communecter/element/get"),
+      "params"              => array("href" => "/ph/communecter/element/params"),
       "delete"              => array("href" => "/ph/communecter/element/delete"),
     ),
     "co2" => array(

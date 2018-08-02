@@ -313,7 +313,7 @@
 	<div class="col-lg-10 col-md-10 col-sm-9 no-padding" id="onepage">
 		<?php
 		if ($type == "poi"){
-			if(@$element["type"]=="video" && @$element["medias"]){
+			if(@$element["type"]=="video" && @$element["medias"] && @$element["medias"][0]["content"]["videoLink"]){
 				$videoLink=str_replace ( "autoplay=1" , "autoplay=0" , @$element["medias"][0]["content"]["videoLink"]  );
 			?>
 				<div class="col-xs-12">
@@ -321,7 +321,25 @@
 						<iframe class="embed-responsive-item fullScreen" src="<?php echo @$videoLink ?>" allowfullscreen></iframe>
 					</div>
 				</div>
-			<?php } ?>
+			<?php } else if( @$element["medias"] && !empty($element["medias"][0]["content"]["url"]) ) {
+
+				?>
+				<div class="col-xs-12">
+					<div class="embed-responsive embed-responsive-16by9">
+						<iframe class="embed-responsive-item fullScreen" src="<?php echo $element["medias"][0]["content"]["url"] ?>" allowfullscreen></iframe>
+					</div>
+				</div>
+			<?php
+			} else if( @$element["urls"] && !empty($element["urls"][0]) ) {
+
+				?>
+				<div class="col-xs-12">
+					<div class="embed-responsive embed-responsive-16by9">
+						<iframe class="embed-responsive-item fullScreen" src="<?php echo $element["urls"][0] ?>" allowfullscreen></iframe>
+					</div>
+				</div>
+			<?php
+			} ?>
 				<div class="col-md-12 col-sm-12 col-xs-12 text-dark center">
 					<h1 class="center">
 						<?php echo $element['name']; ?>
@@ -431,7 +449,9 @@
 				<button class="btn btn-default btn-menubar" id="btn-menu-directory-all">MES GROUPES</button>
 			<?php	} ?>
 
-			<?php if(isset(Yii::app()->session["userId"]) && Yii::app()->session["userId"] == @$element["creator"]){ ?>
+			<?php if(	isset(Yii::app()->session["userId"]) && 
+						// Yii::app()->session["userId"] == @$element["creator"] &&
+						Authorisation::isOrganizationAdmin(Yii::app()->session["userId"], (string) $element["_id"]) ){ ?>
 			<button onclick='javascript:elementLib.openForm("poi","subPoi")' class='btn btn-default pull-right btn-menubar'>
 				<i class='fa fa-plus'></i> <i class='fa fa-video-camera'></i> Ajouter une production
 			</button>
@@ -490,7 +510,7 @@
 							?>
 							<div class="contentItem contentItem<?php echo $key ?>">
 								<a href="#element.detail.type.<?php echo Organization::COLLECTION ?>.id.<?php echo $key ?>" data-placement="top" data-original-title="<?php echo $orga["name"] ?>" class=" lbh btn no-padding contentImg tooltips">
-								<img width="50" height="50"  alt="image" class="" src="<?php echo $urlImg ?>">
+								<img width="75" height="75"  alt="image" class="" src="<?php echo $urlImg ?>">
 								</a>
 								<button class="removeLink" data-type="producors" data-id="<?php echo $key ?>"><i class="fa fa-remove"></i></button>
 							</div>
@@ -505,7 +525,7 @@
 				</div>
 				<div id="divSupports" class="col-md-6 col-sm-6 col-xs-6 padding-10">
 					<div class="col-md-12 col-sm-12 col-xs-12">
-					<h4 class="col-md-8 col-sm-8 col-xs-8 no-margin margin-bottom-5 no-padding text-dark" style="font-size:18px;">Soutien</h4>
+					<h4 class="col-md-8 col-sm-8 col-xs-8 no-margin margin-bottom-5 no-padding text-dark" style="font-size:18px;">Soutiens</h4>
 					<?php if(@Yii::app()->session["userId"]){ ?>
 						<?php if ($edit==true || ($openEdition == true )) { ?>
 					<button class="btn btn-xs bg-white text-dark pull-right editLink"><i class="fa fa-pencil"></i></button>
@@ -529,7 +549,7 @@
 							?>
 							<div class="contentItem contentItem<?php echo $key ?>">
 								<a href="#element.detail.type.<?php echo Organization::COLLECTION ?>.id.<?php echo $key ?>" data-placement="top" data-original-title="<?php echo $orga["name"] ?>" class=" lbh btn no-padding contentImg tooltips">
-								<img width="50" height="50"  alt="image" class="" src="<?php echo $urlImg ?>">
+								<img width="75" height="75"  alt="image" class="" src="<?php echo $urlImg ?>">
 								</a>
 								<button class="removeLink" data-type="supports" data-id="<?php echo $key ?>"><i class="fa fa-remove"></i></button>
 							</div>
@@ -853,7 +873,7 @@
                 </div>
 			</div>
 		<?php } else if($type==Organization::COLLECTION) { ?>
-			<h3>Membres du groupe (<span id="nbMemberTotal"></span>)</h3>
+			<h4 style="font-size: 14px; text-align: center;">Membres du groupe (<span id="nbMemberTotal"></span>)</h4>
 			<hr>
 			<h4>Administrateurs (<span id="nbAdmin"></span>)</h4>
 
@@ -891,22 +911,28 @@
 			$nbMemberPending=0;
 			if(@$members && !empty($members)) {
 				foreach($members as $key => $member){
-					if((!isset($member["isAdmin"]) || @$member["isAdmin"]==false) && !@$member["toBeValidated"]){ $nbMember++;
-					$profilThumbImageUrl = Element::getImgProfil($member, "profilThumbImageUrl", $this->module->assetsUrl);
-					$spec = Element::getElementSpecsByType( @$member["type"] );
+					if((!isset($member["isAdmin"]) || @$member["isAdmin"]==false) && !@$member["toBeValidated"]){
+						$nbMember++;
+						$profilThumbImageUrl = Element::getImgProfil($member, "profilThumbImageUrl", $this->module->assetsUrl);
+						$spec = Element::getElementSpecsByType( @$member["type"] );
 		?>
-			<a href="#<?php echo $spec["hash"]; echo @$member["id"]?>"  class="lbh col-md-12 no-padding margin-top-5 elipsis">
-				<img class="img-circle" src="<?php echo $profilThumbImageUrl; ?>" height=35 width=35>
-				<span class="username-min"><?php echo @$member["name"]; ?></span>
-				<?php if (@$member["pending"]){ ?>
-					<br/><span style="font-style: italic;font-size: 10px;position: absolute;bottom: 0px;left: 38px;">En attente d'inscription</span>
-				<?php } ?>
-			</a>
-		<?php }else if((!isset($member["isAdmin"]) || @$member["isAdmin"]==false) && @$member["toBeValidated"]) $nbMemberPending++;
-		}}
+						<a href="#<?php echo $spec["hash"]; echo @$member["id"]?>"  class="lbh col-md-12 no-padding margin-top-5 elipsis">
+							<img class="img-circle" src="<?php echo $profilThumbImageUrl; ?>" height=35 width=35>
+							<span class="username-min"><?php echo @$member["name"]; ?></span>
+							<?php if (@$member["pending"]){ ?>
+								<br/><span style="font-style: italic;font-size: 10px;position: absolute;bottom: 0px;left: 38px;">En attente d'inscription</span>
+							<?php } ?>
+						</a>
+		<?php 		}else if( ( !isset($member["isAdmin"]) || @$member["isAdmin"]==false) && 
+								@$member["toBeValidated"] ) 
+						$nbMemberPending++;
+				}
+			}
+
 			if($nbMember==0){ ?>
 				<span style="font-style: italic;">Pas de membres sur ce groupe de travail</span>
 			<?php }
+
 			if($nbMemberPending > 0 || $nbAdminPending > 0){ ?>
 				<div class="col-md-12 no-padding margin-top-5">
 					<hr>
@@ -1140,6 +1166,9 @@
 		$("#nbAdmin").html(nbAdmin);
 		$("#nbMember").html(nbMember);
 		$("#nbPending").html(nbPending);
+		console.log("nbAdmin", nbAdmin);
+		console.log("nbMember", nbMember);
+		console.log("nbPending", nbPending);
 		$("#nbMemberTotal").html(parseInt(nbAdmin)+parseInt(nbMember));
 
 		/*var url = "news/index/type/"+contextType+"/id/"+contextId+"?isFirst=1&";

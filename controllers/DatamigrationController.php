@@ -1200,5 +1200,46 @@ class DatamigrationController extends CommunecterController {
 		}		
 		echo  "NB Element mis à jours: " .$nbelement."<br>" ;
 	}
+
+
+
+	public function actionPreferencesMailNotif() {
+		$nbUser = 0;
+		$preferencesUsers = array(
+							"mailNotif" => array(),
+							"privateFields" => array("email", "streetAddress", "phone", "directory", "birthDate"),
+							"isOpenData" => false );
+		$users = PHDB::find(Person::COLLECTION, 
+							array("modifiedByBatch.PreferencesMailNotif" => array('$exists' => 0)), 
+							array("modifiedByBatch", "preferences"));
+		foreach ($users as $key => $person) {
+			$person["modifiedByBatch"][] = array("PreferencesMailNotif" => new MongoDate(time()));
+			$person["preferences"]["mailNotif"] = true;
+			$res = PHDB::update(Person::COLLECTION, 
+										  	array("_id"=>new MongoId($key)),
+					                        array('$set' => array(	"preferences" => $person["preferences"],
+					                        						"modifiedByBatch" => $person["modifiedByBatch"])
+					                        					)
+					                    );
+
+			if($res["ok"] == 1){
+				$nbUser++;
+			}else{
+				echo "<br/> Error with user id : ".$key;
+			}
+		}
+
+		echo "Number of user with preferences modified : ".$nbUser;
+	}
+
+	// public function actionUrlNotifcationOld() {
+	// 	$nbUser = 0;
+	// 	$where = array( "notify.url" => "/communecter/organization/directory/");
+	// 	$notif = PHDB::find(ActivityStream::COLLECTION,$where);
+	// 	// foreach ($users as $key => $person) {
+			
+	// 	// }
+	// 	Rest::json($notif); exit ;
+	// }
 }
 
